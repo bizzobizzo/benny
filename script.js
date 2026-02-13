@@ -3,58 +3,59 @@ const yesBtn = document.getElementById('yesBtn');
 const title = document.getElementById('mainTitle');
 const buttonGroup = document.getElementById('buttonGroup');
 
-let scaleYes = 1;      // Grandezza iniziale del SÌ
-let scaleNo = 1;       // Grandezza iniziale del NO
-let tentativi = 0;     // Contatore di quante volte scappa il NO
+let scaleYes = 1;
+let scaleNo = 1;
+let tentativi = 0;
 
 function scappa() {
-    // Rende il tasto NO "assoluto" così può saltare ovunque
-    noBtn.style.position = "absolute";
+    // Rendiamo il tasto assoluto solo al primo tocco
+    if (noBtn.style.position !== "absolute") {
+        noBtn.style.position = "absolute";
+    }
 
-    const padding = 50;
-    const maxX = window.innerWidth - noBtn.offsetWidth - padding;
-    const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+    // Usiamo l'area visibile del browser (viewport)
+    // Sottraiamo un margine di sicurezza di 100px per lato
+    const larghezzaSchermo = window.innerWidth;
+    const altezzaSchermo = window.innerHeight;
 
-    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
 
-    noBtn.style.left = `${randomX}px`;
-    noBtn.style.top = `${randomY}px`;
+    // Calcolo posizione: evitiamo i bordi estremi (rimaniamo tra il 10% e il 80% dello schermo)
+    const randomX = Math.floor(Math.random() * (larghezzaSchermo - btnWidth - 40)) + 20;
+    const randomY = Math.floor(Math.random() * (altezzaSchermo - btnHeight - 40)) + 20;
 
-    // Incrementiamo il numero di tentativi
+    // Applichiamo le nuove coordinate
+    noBtn.style.left = randomX + "px";
+    noBtn.style.top = randomY + "px";
+
+    // Incremento difficoltà
     tentativi++;
-
-    // 1. Il tasto SÌ cresce sempre
     scaleYes += 0.2; 
     yesBtn.style.transform = `scale(${scaleYes})`;
 
-    // 2. Il tasto NO dopo 5 volte inizia a rimpicciolirsi
     if (tentativi > 5) {
         scaleNo -= 0.1;
-        if (scaleNo < 0.3) scaleNo = 0.3; // Non lo facciamo sparire del tutto, ma diventa minuscolo
+        if (scaleNo < 0.4) scaleNo = 0.4;
         noBtn.style.transform = `scale(${scaleNo})`;
     }
 }
 
-// Supporto per PC (mouseover) e Telefono (touchstart)
+// Eventi per PC e Mobile
 noBtn.addEventListener('mouseover', scappa);
-noBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+noBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // Fondamentale su mobile per non far cliccare il tasto
     scappa();
 });
 
-// Azione finale quando clicca SÌ
+// Vittoria
 yesBtn.addEventListener('click', () => {
-    // Messaggio finale gigante
     title.innerHTML = "Sapevo che avresti detto di sì! 😍 ❤️";
     title.classList.add('success-text');
-    
-    // Nascondiamo i bottoni
     buttonGroup.style.display = "none";
+    noBtn.style.display = "none"; // Sparisce anche il NO per pulizia
 
-    // Esplosione di coriandoli/cuori
-    const end = Date.now() + (15 * 1000); // 15 secondi di pioggia
-
+    const end = Date.now() + (15 * 1000);
     (function frame() {
         confetti({
             particleCount: 3,
@@ -70,7 +71,6 @@ yesBtn.addEventListener('click', () => {
             origin: { x: 1 },
             colors: ['#ff0000', '#ff69b4']
         });
-
         if (Date.now() < end) {
             requestAnimationFrame(frame);
         }
